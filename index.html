@@ -232,6 +232,36 @@
             font-size: 1.1em;
         }
         
+        .api-info {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            color: #856404;
+        }
+        
+        .api-info h4 {
+            margin-bottom: 10px;
+            color: #856404;
+        }
+        
+        .search-link {
+            display: block;
+            background: #e7f3ff;
+            border: 1px solid #b8daff;
+            border-radius: 8px;
+            padding: 10px;
+            margin: 10px 0;
+            text-decoration: none;
+            color: #0066cc;
+            font-weight: bold;
+        }
+        
+        .search-link:hover {
+            background: #d4ebff;
+        }
+        
         @media (max-width: 768px) {
             .date-group {
                 flex-direction: column;
@@ -268,9 +298,19 @@
         
         <div class="content">
             <div class="form-section">
+                <div class="api-info">
+                    <h4>💡 使用說明</h4>
+                    <p>此版本提供Google搜索功能：</p>
+                    <ol>
+                        <li>輸入公司名稱和選擇搜索選項</li>
+                        <li>點擊搜索按鈕創建Google搜索鏈接</li>
+                        <li>點擊生成的鏈接在新標籤頁搜索真實信息</li>
+                    </ol>
+                </div>
+                
                 <div class="form-group">
                     <label for="company">🏢 公司名称:</label>
-                    <input type="text" id="company" placeholder="请输入公司名称，例如：阿里巴巴、腾讯等" value="阿里巴巴集团">
+                    <input type="text" id="company" placeholder="请输入公司名称，例如：阿里巴巴、腾讯等" value="阿里巴巴">
                 </div>
                 
                 <div class="form-group">
@@ -336,9 +376,13 @@
                 </div>
                 
                 <div class="button-group">
-                    <button id="searchBtn">🚀 开始搜索</button>
-                    <button id="exportBtn">📤 导出结果</button>
-                    <button id="clearBtn">🗑️ 清空结果</button>
+                    <button id="searchBtn">🔗 生成Google搜索鏈接</button>
+                    <button id="clearBtn">🗑️ 清空結果</button>
+                </div>
+                
+                <div id="searchLinksContainer" style="display:none; margin-top: 20px;">
+                    <h4>生成的Google搜索鏈接：</h4>
+                    <div id="searchLinks"></div>
                 </div>
                 
                 <div class="progress-bar" id="progressBar">
@@ -346,7 +390,7 @@
                 </div>
                 
                 <div class="status" id="status">
-                    <span>✅ 就绪 - 请填写公司名称并点击搜索</span>
+                    <span>✅ 就緒 - 請填寫公司名稱並點擊生成搜索鏈接</span>
                 </div>
             </div>
             
@@ -356,7 +400,8 @@
                 </div>
                 <div class="results-content" id="resultsContent">
                     <div class="no-results" id="noResults">
-                        等待搜索结果...
+                        點擊"生成Google搜索鏈接"按鈕創建搜索鏈接<br>
+                        點擊鏈接在新標籤頁中查看真實搜索結果
                     </div>
                 </div>
             </div>
@@ -366,13 +411,14 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const searchBtn = document.getElementById('searchBtn');
-            const exportBtn = document.getElementById('exportBtn');
             const clearBtn = document.getElementById('clearBtn');
             const progressBar = document.getElementById('progressBar');
             const progressFill = document.getElementById('progressFill');
             const status = document.getElementById('status');
             const resultsContent = document.getElementById('resultsContent');
             const noResults = document.getElementById('noResults');
+            const searchLinksContainer = document.getElementById('searchLinksContainer');
+            const searchLinks = document.getElementById('searchLinks');
             
             // 设置日期输入框的默认值
             const today = new Date();
@@ -382,161 +428,112 @@
             document.getElementById('startDate').valueAsDate = thirtyDaysAgo;
             document.getElementById('endDate').valueAsDate = today;
             
-            // 搜索功能
+            // 生成Google搜索鏈接
             searchBtn.addEventListener('click', function() {
                 const company = document.getElementById('company').value.trim();
+                
                 if (!company) {
-                    alert('请输入公司名称');
+                    alert('請輸入公司名稱');
                     return;
                 }
                 
-                // 显示进度条
+                // 顯示進度條
                 progressBar.style.display = 'block';
-                status.innerHTML = '<span>🔍 正在搜索中...</span>';
+                status.innerHTML = '<span>🔗 生成搜索鏈接中...</span>';
                 searchBtn.disabled = true;
                 
-                // 模拟搜索过程
-                simulateSearch(company);
+                // 模擬處理時間
+                setTimeout(() => {
+                    generateSearchLinks(company);
+                    progressBar.style.display = 'none';
+                    searchBtn.disabled = false;
+                    status.innerHTML = '<span>✅ 搜索鏈接已生成</span>';
+                }, 1000);
             });
             
-            // 模拟搜索函数
-            function simulateSearch(company) {
-                // 模拟网络延迟
-                let progress = 0;
-                const interval = setInterval(() => {
-                    progress += 10;
-                    progressFill.style.width = progress + '%';
-                    
-                    if (progress >= 100) {
-                        clearInterval(interval);
-                        
-                        // 搜索完成，显示结果
-                        setTimeout(() => {
-                            progressBar.style.display = 'none';
-                            searchBtn.disabled = false;
-                            
-                            // 生成模拟结果
-                            const results = generateMockResults(company);
-                            displayResults(results);
-                            
-                            status.innerHTML = `<span>✅ 搜索完成 - 找到 ${results.length} 条结果</span>`;
-                        }, 500);
-                    }
-                }, 100);
-            }
-            
-            // 生成模拟结果
-            function generateMockResults(company) {
+            // 生成Google搜索鏈接
+            function generateSearchLinks(company) {
+                const startDate = document.getElementById('startDate').value;
+                const endDate = document.getElementById('endDate').value;
+                const searchMode = document.querySelector('input[name="searchMode"]:checked').value;
+                
+                // 構建搜索查詢
+                let baseQuery = company;
+                if (searchMode === 'exact') {
+                    baseQuery = `"${company}"`;
+                }
+                
+                // 根據選中的輿情類型構建搜索鏈接
                 const riskTypes = [];
-                if (document.getElementById('creditRisk').checked) riskTypes.push('信用风险');
-                if (document.getElementById('complianceRisk').checked) riskTypes.push('监管合规风险');
-                if (document.getElementById('countryRisk').checked) riskTypes.push('国别风险');
-                if (document.getElementById('operationalRisk').checked) riskTypes.push('经营风险');
-                if (document.getElementById('legalRisk').checked) riskTypes.push('法律风险');
+                if (document.getElementById('creditRisk').checked) riskTypes.push('信用風險', '債務違約', '評級下調');
+                if (document.getElementById('complianceRisk').checked) riskTypes.push('監管處罰', '調查', '合規問題');
+                if (document.getElementById('countryRisk').checked) riskTypes.push('制裁', '政治風險', '政策變化');
+                if (document.getElementById('operationalRisk').checked) riskTypes.push('經營問題', '管理層變動', '業績下滑');
+                if (document.getElementById('legalRisk').checked) riskTypes.push('法律糾紛', '訴訟', '違法');
                 
-                if (riskTypes.length === 0) return [];
+                // 生成搜索鏈接
+                searchLinks.innerHTML = '';
                 
-                const baseResults = [
-                    {
-                        title: `${company}因财务问题被评级机构下调信用评级`,
-                        date: '2023-10-15',
-                        type: '信用风险',
-                        source: '财经新闻',
-                        summary: `${company}因近期财务表现不佳，被知名评级机构下调信用评级，可能影响其融资成本。`
-                    },
-                    {
-                        title: `监管机构对${company}展开合规调查`,
-                        date: '2023-10-10',
-                        type: '监管合规风险',
-                        source: '监管公告',
-                        summary: `监管机构宣布对${company}展开合规性调查，重点关注其内部控制和合规管理。`
-                    },
-                    {
-                        title: `${company}在某国面临政策风险`,
-                        date: '2023-10-05',
-                        type: '国别风险',
-                        source: '国际新闻',
-                        summary: `${company}在某国的业务因当地政策变化面临不确定性，可能影响其海外收入。`
-                    },
-                    {
-                        title: `${company}卷入法律纠纷`,
-                        date: '2023-09-28',
-                        type: '法律风险',
-                        source: '法律公告',
-                        summary: `${company}因合同纠纷被起诉，案件仍在审理中，结果尚不确定。`
-                    },
-                    {
-                        title: `${company}高管变动引发关注`,
-                        date: '2023-09-20',
-                        type: '经营风险',
-                        source: '公司公告',
-                        summary: `${company}多名高管离职，市场担忧其管理稳定性。`
-                    }
-                ];
+                // 基本搜索
+                const basicQuery = `${baseQuery} 負面消息 OR 負面新聞 OR 風險`;
+                const basicUrl = `https://www.google.com/search?q=${encodeURIComponent(basicQuery)}&tbs=cdr:1,cd_min:${startDate},cd_max:${endDate}`;
+                const basicLink = document.createElement('a');
+                basicLink.href = basicUrl;
+                basicLink.target = "_blank";
+                basicLink.className = "search-link";
+                basicLink.textContent = `🔍 基本負面消息搜索: ${company}`;
+                searchLinks.appendChild(basicLink);
                 
-                // 过滤结果
-                const filteredResults = [];
-                const startDate = new Date(document.getElementById('startDate').value);
-                const endDate = new Date(document.getElementById('endDate').value);
-                
-                for (const result of baseResults) {
-                    const resultDate = new Date(result.date);
-                    if (resultDate >= startDate && resultDate <= endDate && riskTypes.includes(result.type)) {
-                        filteredResults.push(result);
-                    }
-                }
-                
-                return filteredResults;
-            }
-            
-            // 显示结果
-            function displayResults(results) {
-                if (results.length === 0) {
-                    resultsContent.innerHTML = '<div class="no-results">未找到相关负面舆情信息</div>';
-                    return;
-                }
-                
-                let html = '';
-                results.forEach((result, index) => {
-                    html += `
-                        <div class="result-item">
-                            <div class="result-title">${result.title}</div>
-                            <div class="result-meta">
-                                <span>📅 日期: ${result.date}</span>
-                                <span>⚠️ 类型: ${result.type}</span>
-                                <span>来源: ${result.source}</span>
-                            </div>
-                            <div class="result-summary">${result.summary}</div>
-                        </div>
-                    `;
+                // 按輿情類型生成搜索鏈接
+                riskTypes.forEach(type => {
+                    const typeQuery = `${baseQuery} ${type}`;
+                    const typeUrl = `https://www.google.com/search?q=${encodeURIComponent(typeQuery)}&tbs=cdr:1,cd_min:${startDate},cd_max:${endDate}`;
+                    const typeLink = document.createElement('a');
+                    typeLink.href = typeUrl;
+                    typeLink.target = "_blank";
+                    typeLink.className = "search-link";
+                    typeLink.textContent = `⚠️ ${type}搜索: ${company}`;
+                    searchLinks.appendChild(typeLink);
                 });
                 
-                resultsContent.innerHTML = html;
+                // 綜合搜索
+                if (riskTypes.length > 0) {
+                    const combinedQuery = `${baseQuery} (${riskTypes.join(' OR ')})`;
+                    const combinedUrl = `https://www.google.com/search?q=${encodeURIComponent(combinedQuery)}&tbs=cdr:1,cd_min:${startDate},cd_max:${endDate}`;
+                    const combinedLink = document.createElement('a');
+                    combinedLink.href = combinedUrl;
+                    combinedLink.target = "_blank";
+                    combinedLink.className = "search-link";
+                    combinedLink.textContent = `📊 綜合負面輿情搜索: ${company}`;
+                    searchLinks.appendChild(combinedLink);
+                }
+                
+                // 顯示搜索鏈接容器
+                searchLinksContainer.style.display = 'block';
+                
+                // 更新結果區域
+                resultsContent.innerHTML = `
+                    <div class="no-results">
+                        <h3>Google搜索鏈接已生成！</h3>
+                        <p>點擊下方鏈接在新標籤頁中查看真實搜索結果：</p>
+                        <ul style="text-align:left; margin-top:20px;">
+                            <li>點擊鏈接將在Google中搜索相關負面信息</li>
+                            <li>搜索結果包含您設定的日期範圍</li>
+                            <li>鏈接會自動過濾相關負面輿情類型</li>
+                        </ul>
+                    </div>
+                `;
             }
             
-            // 导出功能
-            exportBtn.addEventListener('click', function() {
-                const content = resultsContent.innerText || '暂无结果';
-                const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `舆情监测结果_${new Date().toISOString().split('T')[0]}.txt`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                
-                status.innerHTML = '<span>📤 结果已导出</span>';
-            });
-            
-            // 清空结果
+            // 清空結果
             clearBtn.addEventListener('click', function() {
-                resultsContent.innerHTML = '<div class="no-results">等待搜索结果...</div>';
-                status.innerHTML = '<span>🗑️ 结果已清空</span>';
+                searchLinksContainer.style.display = 'none';
+                searchLinks.innerHTML = '';
+                resultsContent.innerHTML = '<div class="no-results">點擊"生成Google搜索鏈接"按鈕創建搜索鏈接<br>點擊鏈接在新標籤頁中查看真實搜索結果</div>';
+                status.innerHTML = '<span>🗑️ 結果已清空</span>';
             });
             
-            // 日期验证
+            // 日期驗證
             document.getElementById('startDate').addEventListener('change', validateDates);
             document.getElementById('endDate').addEventListener('change', validateDates);
             
@@ -545,7 +542,7 @@
                 const endDate = new Date(document.getElementById('endDate').value);
                 
                 if (startDate > endDate) {
-                    alert('起始日期不能晚于结束日期');
+                    alert('起始日期不能晚於結束日期');
                     document.getElementById('endDate').value = document.getElementById('startDate').value;
                 }
             }
@@ -553,3 +550,6 @@
     </script>
 </body>
 </html>
+
+
+
